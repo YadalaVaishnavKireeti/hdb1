@@ -214,6 +214,21 @@ export default function App() {
     }
   };
 
+  // Navigate between videos without changing the saved sound preference.
+  const changeVideo = (direction) => {
+    const nextIndex = currentVideoIndex + direction;
+
+    if (nextIndex < 0 || nextIndex >= VIDEO_SOURCES.length) return;
+
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+
+    setVideoError(false);
+    setCurrentVideoIndex(nextIndex);
+    setMessage(`Playing memory ${nextIndex + 1} of ${VIDEO_SOURCES.length}`);
+  };
+
   const restart = () => {
     if (videoRef.current) {
       videoRef.current.pause();
@@ -428,12 +443,31 @@ export default function App() {
             <div className="video-actions">
               <button
                 className="secondary-button"
+                onClick={() => changeVideo(-1)}
+                disabled={currentVideoIndex === 0}
+                aria-label="Play previous video"
+              >
+                ◀ Previous
+              </button>
+
+              <button
+                className="secondary-button"
                 onClick={toggleSound}
+                aria-label={soundOn ? 'Turn sound off' : 'Turn sound on'}
               >
                 {soundOn
                   ? <Volume2 size={16} />
                   : <VolumeX size={16} />}
                 {soundOn ? 'Sound on' : 'Sound off'}
+              </button>
+
+              <button
+                className="secondary-button"
+                onClick={() => changeVideo(1)}
+                disabled={currentVideoIndex === VIDEO_SOURCES.length - 1}
+                aria-label="Play next video"
+              >
+                Next ▶
               </button>
 
               <button
