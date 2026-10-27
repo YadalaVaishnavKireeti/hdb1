@@ -4,13 +4,13 @@ import confetti from 'canvas-confetti';
 import './App.css';
 
 const VIDEO_SOURCES = [
-  '/videos/video1.MP4',
-  '/videos/video2.MP4',
-  '/videos/video3.MP4',
-  '/videos/video4.MP4',
-  '/videos/video5.MP4',
-  '/videos/video6.MP4',
-  '/videos/video7.MP4',
+  '/videos/video1.mp4',
+  '/videos/video2.mp4',
+  '/videos/video3.mp4',
+  '/videos/video4.mp4',
+  '/videos/video5.mp4',
+  '/videos/video6.mp4',
+  '/videos/video7.mp4',
 ];
 
 export default function App() {
@@ -22,7 +22,7 @@ export default function App() {
   const [phase, setPhase] = useState('gift'); // gift -> reveal -> video
   const [scissors, setScissors] = useState({ x: 12, y: 70 });
   const [isDragging, setIsDragging] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
+  const [soundOn, setSoundOn] = useState(false); // Start muted so autoplay is allowed by most browsers.
   const [message, setMessage] = useState('A little something for you…');
   const [videoError, setVideoError] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
@@ -107,11 +107,22 @@ export default function App() {
     }
   }, [phase]);
 
+  const handleVideoEnded = () => {
+    if (currentVideoIndex < VIDEO_SOURCES.length - 1) {
+      setCurrentVideoIndex((index) => index + 1);
+      setVideoError(false);
+      setMessage(`Playing memory ${currentVideoIndex + 2} of ${VIDEO_SOURCES.length}`);
+    } else {
+      setMessage('You’ve watched all seven memories. Happy birthday!');
+    }
+  };
+
   const restart = () => {
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
+    setCurrentVideoIndex(0);
     setPhase('gift');
     setScissors({ x: 12, y: 70 });
     setMessage('A little something for you…');
@@ -195,23 +206,27 @@ export default function App() {
             <div className="video-frame">
               {!videoError ? (
                 <video
+                  key={VIDEO_SOURCES[currentVideoIndex]}
                   ref={videoRef}
                   className="birthday-video"
-                  src={VIDEO_SRC}
+                  src={VIDEO_SOURCES[currentVideoIndex]}
                   controls
                   autoPlay
                   playsInline
+                  preload="auto"
                   muted={!soundOn}
+                  onEnded={handleVideoEnded}
                   onError={() => setVideoError(true)}
-                  onPlay={() => setMessage('Enjoy your little surprise')}
+                  onPlay={() => setMessage(`Playing memory ${currentVideoIndex + 1} of ${VIDEO_SOURCES.length}`)}
                 >
                   Sorry, your browser does not support embedded videos.
                 </video>
               ) : (
                 <div className="video-placeholder">
                   <div className="placeholder-play"><Play size={30} fill="currentColor" /></div>
-                  <h2>Your memories go here</h2>
-                  <p>Add all seven videos to <code>public/videos/</code> as <code>video1.mp4</code> through <code>video7.mp4</code>, then refresh this page.</p>
+                  <h2>Video {currentVideoIndex + 1} could not be loaded</h2>
+                  <p>Check that <code>public/videos/video{currentVideoIndex + 1}.mp4</code> exists and the filename matches exactly (including lowercase letters).</p>
+                  <button className="secondary-button" onClick={() => { setVideoError(false); if (currentVideoIndex < VIDEO_SOURCES.length - 1) setCurrentVideoIndex((index) => index + 1); }}>Skip to next video</button>
                 </div>
               )}
             </div>
